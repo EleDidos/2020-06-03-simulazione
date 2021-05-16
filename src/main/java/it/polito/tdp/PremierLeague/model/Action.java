@@ -4,7 +4,7 @@ public class Action {
 	Integer playerID;
 	Integer matchID;
 	Integer teamID;
-	Integer starts;
+	Integer starts; // 1
 	Integer goals;
 	Integer timePlayed;
 	Integer redCards;

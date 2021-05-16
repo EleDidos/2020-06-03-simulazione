@@ -5,9 +5,11 @@
 package it.polito.tdp.PremierLeague;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import it.polito.tdp.PremierLeague.model.Model;
+import it.polito.tdp.PremierLeague.model.Player;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -44,16 +46,67 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
+    	txtResult.clear();
+    	//String goalStr;
+    	float goal; //con il PUNTO
+    	try {
+    		//goalStr=txtGoals.getText();
+    		goal=Float.parseFloat(txtGoals.getText());
+    	} catch(NumberFormatException e) {
+    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    		return;
+    	} catch (NullPointerException npe) {
+    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    		return;
+    	}
+    	
+    	this.model.creaGrafo(goal);
+    	
+    	txtResult.appendText(String.format("#VERTICI = %d\n#ARCHI = %d\n", model.nVertici(),model.nArchi()));
+    	txtResult.appendText("ARCHI:\n");
+    	txtResult.appendText(model.getArchi().toString());
     }
 
     @FXML
     void doDreamTeam(ActionEvent event) {
-
+    	txtResult.appendText("\n");
+    	
+    	Integer k; //n giocatori
+    	
+    	try {
+    		k = Integer.parseInt(txtK.getText());
+    		
+    	} catch(NumberFormatException e) {
+    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    		return;
+    	} catch (NullPointerException npe) {
+    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    		return;
+    	}
+    	
+    	txtResult.appendText("Il DreamTeam è composto da:\n");
+    	List <Player> best = model.getDreamTeam(k);
+    	String dreamTeam="";
+		for(Player p: best)
+			dreamTeam+=p.getName()+"\n";
+    	txtResult.appendText(dreamTeam);
+    	txtResult.appendText("Il GRADO di titolarità è di: "+model.getGradoTot(best));
+    	
     }
 
     @FXML
     void doTopPlayer(ActionEvent event) {
+    	txtResult.appendText("\n");
+    	Player top = model.getTopPlayer();
+    	
+    	if(top==null) {
+    		txtResult.appendText("Crea prima il GRAFO!\n");
+    		return;
+    	}
+    	
+    	txtResult.appendText("Il top player è: "+top+"\n");
+    	txtResult.appendText("Ha superato i seguenti giocatori in MINUTI giocati:\n");
+    	txtResult.appendText(model.getSconfitti(top).toString());
 
     }
 
