@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
@@ -20,8 +21,7 @@ public class Model {
 	private Map <Integer,Player> idMap;
 	private PremierLeagueDAO dao;
 	
-	private List <Player> inseribili; //vertici per RICORSIONE
-	private List <Player> tolti; //lo aggiorno di volta in volta
+	private List <Player> best; //dream team ricorsione
 	
 	public Model() {
 		idMap= new HashMap <Integer,Player>();
@@ -42,6 +42,7 @@ public class Model {
 		//aggiungo archi
 		// un'adiacenza diventa arco solo se quei giocatori 
 		// sono nella mappa e quindi hanno la media giusta
+		
 		
 		for(Adiacenza a : dao.getAdiacenze()) {
 			
@@ -112,16 +113,17 @@ public class Model {
 	public StringBuilder getSconfitti(Player p) {
 		StringBuilder sb = new StringBuilder();
 		
-		//in ordine di peso decrescente per chiave
+		//in ordine di peso decrescente 
 					//peso DELTA, sconfitto 
-		LinkedHashMap <Double, Player> sconfitti = new LinkedHashMap <Double, Player>();
+		LinkedList <Defeated> sconfitti = new LinkedList <Defeated>();
 		
 		for(DefaultWeightedEdge e: graph.outgoingEdgesOf(p)) {
-			sconfitti.put(graph.getEdgeWeight(e), graph.getEdgeTarget(e));
+			//sconfitti.put(graph.getEdgeWeight(e), graph.getEdgeTarget(e));
+			sconfitti.add(new Defeated(graph.getEdgeWeight(e), graph.getEdgeTarget(e)));
 		}
 		
-		for(Double d: sconfitti.keySet()) {
-			sb.append(sconfitti.get(d)+" con "+d+" minuti di distacco\n");
+		for(Defeated d: sconfitti) {
+			sb.append(d.getPlayer()+" con "+d.getDelta()+" minuti di distacco\n");
 		}
 			
 		return sb;
@@ -182,16 +184,11 @@ public class Model {
 	 */
 	public List<Player> getDreamTeam(Integer k) {
 		
-		//tutti i giocatori che possono essere provati
-		//all'inizio tutti i vertici
-		inseribili = new ArrayList <Player>();
-		for(Player p: idMap.values())
-			inseribili.add(p);
-		
-		List <Player> best = new ArrayList <Player>();
+		best = new ArrayList <Player>();
 		List <Player> parziale = new ArrayList <Player>();
 		
-		ricorsiva(parziale,best,k);
+						//al 1° giro inseribili=array di tutti i vertici
+		ricorsiva(parziale,new ArrayList<Player>(this.graph.vertexSet()),k);
 		
 		return best;
 	}
@@ -203,7 +200,7 @@ public class Model {
 	 * @param livello
 	 * @param best
 	 */
-	private void ricorsiva (List<Player>parziale,List<Player> best, int k) {
+	private void ricorsiva (List<Player>parziale, List<Player>inseribili, int k) {
 		
 		//CONDIZIONE DI TERMINAZIONE
 		if(parziale.size()==k) {
@@ -214,47 +211,33 @@ public class Model {
 			return;
 		}
 		else {
-			for(Player prova: inseribili) {
-				if(!parziale.contains(prova)) {
-					parziale.add(prova);
-					this.togliSconfitti(prova);
-					ricorsiva(parziale,best,k);
-				
-					//tolgo ultimo elemento - torno indietro di un liv
-					//provo con nuovo inseribile
-					//riaggiungo quelli che avevo tolto
-					parziale.remove(parziale.size()-1);
-					for(Player p: tolti)
-						inseribili.add(p);
-				}//if
+			for(Player p : inseribili) {
+				if(!parziale.contains(p)) {
+					parziale.add(p);
+					
+					/**  MODIFICO "RemainingPlayers" NON l'array SU CUI CILO **/
+		
+					//la prima volta "inseribili" comprende tutti i vertici
+					//di volta in volta inseribili del liv precedente diventa 
+					//"remainingPlayers" pronto a essere modificato
+					List<Player> remainingPlayers = new ArrayList<>(inseribili);
+					
+					//i "battuti" = successori nel grafico non devono più essere considerati
+					remainingPlayers.removeAll(Graphs.successorListOf(graph, p));
+					ricorsiva(parziale, remainingPlayers, k);
+					//remainingPlayers non considerando i "battuti" diventa il nuovo
+					//"inseribili" per il grado di ricorsione successivo
+					
+					//torno indietro di un livello nella ricorsione
+					parziale.remove(p);
+					
+				}
 			}
-			
-			
-		} //else
+		}
 		
 		
 	}//ricorsiva
 	
 	
-	/**
-	 * Tiene Traccia dei giocatori tolti da inseribili
-	 * perché sconfitto da quello di prova
-	 * se poi devo fare BACKTRACKING
-	 * devo sapere chi rinserire
-	 * 
-	 * @param prova
-	 * @return
-	 */
-	private void togliSconfitti(Player prova) {
-		tolti = new ArrayList<Player>(); // i giocatori tolti da inseribili
-							
-		for(Player p: inseribili)
-			//se p è tra gli sconfitti di "prova"
-			//lo tolgo da inseribili
-			if(this.getSconfittiMappa(prova).values().contains(p)) {
-				inseribili.remove(p);
-				tolti.add(p);
-			}
-	}
 
 }

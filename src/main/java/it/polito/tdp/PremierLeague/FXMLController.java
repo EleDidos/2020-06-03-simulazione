@@ -86,10 +86,9 @@ public class FXMLController {
     	
     	txtResult.appendText("Il DreamTeam è composto da:\n");
     	List <Player> best = model.getDreamTeam(k);
-    	String dreamTeam="";
-		for(Player p: best)
-			dreamTeam+=p.getName()+"\n";
-    	txtResult.appendText(dreamTeam);
+    	for(Player pi: best)
+    		txtResult.appendText(pi+"\n");
+    	
     	txtResult.appendText("Il GRADO di titolarità è di: "+model.getGradoTot(best));
     	
     }
