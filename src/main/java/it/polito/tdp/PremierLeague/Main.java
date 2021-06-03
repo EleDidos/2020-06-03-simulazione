@@ -1,8 +1,7 @@
 package it.polito.tdp.PremierLeague;
 
 /**
- * 1.COMPARATOR di DEFEATED
- * 2.Dream team
+ *
  * @author elena
  *
  */
