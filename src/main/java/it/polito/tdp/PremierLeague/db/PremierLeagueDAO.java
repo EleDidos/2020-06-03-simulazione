@@ -12,6 +12,7 @@ import java.util.Map;
 
 import it.polito.tdp.PremierLeague.model.Action;
 import it.polito.tdp.PremierLeague.model.Adiacenza;
+import it.polito.tdp.PremierLeague.model.Arco;
 import it.polito.tdp.PremierLeague.model.Player;
 
 public class PremierLeagueDAO {
@@ -39,76 +40,8 @@ public class PremierLeagueDAO {
 		}
 	}
 	
-	/** RIEMPIO ID MAP CON VERTICI
-	 * = GIOCATORI con una media di almeno x goal per partita
-	* da inserire in mappa
-	*/
-	public void vertex(Map <Integer,Player> idMap, float x){
-		
-		String sql = "SELECT p.PlayerID, p.Name "
-				+ "FROM Players AS p, Actions AS a "
-				+ "WHERE p.PlayerID=a.PlayerID "
-				+ "GROUP BY p.PlayerID, p.Name "
-				+ "HAVING AVG(a.Goals)>?";
 	
-		Connection conn = DBConnect.getConnection();
-
-		try {
-			PreparedStatement st = conn.prepareStatement(sql);
-			st.setFloat(1, x);
-			ResultSet res = st.executeQuery();
-		
-			while (res.next()) {
-			
-				if(!idMap.containsKey(res.getInt("PlayerID")))
-					idMap.put(res.getInt("PlayerID"), new Player(res.getInt("PlayerID"), res.getString("Name")));
-			}
-			conn.close();
-			
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			
-		}
-	}
 	
-	/**
-	 * IN OGNI RIGA VEDO solo TITOLARI 
-	 *  che si sono incontrati in una o più partite, ma sono di squadre diverse
-	 * con la rispettiva somma di minuti giocati in quelle partite
-	 * per direzionare l'arco
-	 * --> a1.PlayerID>a2.PlayerID --> 1-2 e 2-1 da contare una volta sola
-	 * --> a1.TeamID<>a2.TeamID --> Team1-Team2 e Team2-Team1 sono da contare doppi
-	 * 								perché c'è partita di andata e di ritorno
-	 *  
-	 * @return
-	 */
-	public List <Adiacenza> getAdiacenze(){
-		String sql = "SELECT a1.PlayerID AS player1, SUM(a1.TimePlayed) AS time1, a2.PlayerID AS player2, SUM(a2.TimePlayed) AS time2 "
-				+ "FROM Actions AS a1, ACTIONS AS a2 "
-				+ "WHERE a1.Starts=1 AND a2.Starts=1 AND a1.MatchID=a2.MatchID AND a1.PlayerID>a2.PlayerID AND a1.TeamID<>a2.TeamID "
-				+ "GROUP BY a1.PlayerID, a2.PlayerID";
-		List<Adiacenza> result = new ArrayList<Adiacenza>();
-		Connection conn = DBConnect.getConnection();
-
-		try {
-			PreparedStatement st = conn.prepareStatement(sql);
-			ResultSet res = st.executeQuery();
-			while (res.next()) {
-				
-				//CREO ADIACENZA: è la classe stessa a metterli in ordine di minuti
-				Adiacenza a = new Adiacenza (res.getInt("player1"),res.getInt("time1"),res.getInt("player2"),res.getInt("time2") );
-				
-				result.add(a);
-			}
-			conn.close();
-			return result;
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
 	
 	public List<Action> listAllActions(){
 		String sql = "SELECT * FROM Actions";
@@ -134,4 +67,85 @@ public class PremierLeagueDAO {
 			return null;
 		}
 	}
+	
+	
+	public void loadAllVertici(Map <Integer, Player> idMap, Double x){
+		
+		
+		String sql = "SELECT p.PlayerID, p.Name "
+				+ "from Players as p, Actions as a "
+				+ "WHERE p.PlayerID=a.PlayerID "
+				+ "GROUP BY p.PlayerID, p.Name "
+				+ "HAVING AVG(a.Goals>=?)" ;
+		try {
+			Connection conn = DBConnect.getConnection() ;
+
+			PreparedStatement st = conn.prepareStatement(sql) ;
+			
+			st.setDouble(1, x);
+			
+			ResultSet res = st.executeQuery() ;
+			
+			while(res.next()) {
+				if(!idMap.containsKey(res.getInt("p.PlayerID"))) {
+					
+					idMap.put(res.getInt("p.PlayerID"),new Player(res.getInt("p.PlayerID"),res.getString("p.Name")) );
+					System.out.println();
+				}//if
+				
+			}//while
+			
+			conn.close();
+			return  ;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return  ;
+		}
+
+	}
+
+
+public List <Arco> listArchi(Map <Integer, Player> idMap){
+	
+	String sql = "SELECT a1.PlayerID as id1, a2.PlayerID as id2, SUM(a1.TimePlayed) as time1, SUM(a2.TimePlayed) as time2 "
+			+ "from Actions as a1, Actions as a2, Matches as m1, Matches as m2 "
+			+ "WHERE a1.MatchID=m1.MatchID and a2.MatchID=m2.MatchID and a1.TeamID>a2.TeamID and a1.Starts=1 and a2.Starts=1 and a1.MatchID=a2.MatchID "
+			+ "GROUP BY a1.PlayerID, a2.PlayerID";
+
+	Connection conn = DBConnect.getConnection();
+	List <Arco> archi = new ArrayList <Arco>();
+
+	try {
+		PreparedStatement st = conn.prepareStatement(sql);
+		ResultSet res = st.executeQuery();
+		while (res.next()) {
+
+			Player p1 = idMap.get(res.getInt("id1"));
+			Player p2 = idMap.get(res.getInt("id2"));
+			Arco a;
+			
+			if(p1!=null & p2!=null) {
+				if(res.getInt("time1")>res.getInt("time2"))
+					a = new Arco(p1,p2,res.getInt("time1")-res.getInt("time2"));
+				else if(res.getInt("time1")<res.getInt("time2"))
+					a = new Arco(p2,p1,res.getInt("time2")-res.getInt("time1"));
+				else //uguali
+					continue;
+				archi.add(a);
+				System.out.println(a);
+			}
+		
+
+		}
+		conn.close();
+		return archi;
+		
+	} catch (SQLException e) {
+		e.printStackTrace();
+		return null;
+	}
+}
+
+
 }

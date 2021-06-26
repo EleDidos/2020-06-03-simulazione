@@ -46,66 +46,66 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
+    	
     	txtResult.clear();
-    	//String goalStr;
-    	float goal; //con il PUNTO
+    	Double x;
+    	
     	try {
-    		//goalStr=txtGoals.getText();
-    		goal=Float.parseFloat(txtGoals.getText());
-    	} catch(NumberFormatException e) {
-    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    		x=Double.parseDouble(txtGoals.getText());
+    		
+    	}catch(NumberFormatException nfe) {
+    		txtResult.setText("Inserisci un numero min di goal fatti");
     		return;
-    	} catch (NullPointerException npe) {
-    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    	}catch(NullPointerException npe) {
+    		txtResult.setText("Inserisci un numero min di goal fatti");
     		return;
     	}
     	
-    	this.model.creaGrafo(goal);
+    	model.creaGrafo(x);
+    	txtResult.appendText("Caratteristiche del grafo:\n#VERTICI = "+model.getNVertici()+"\n#ARCHI = "+model.getNArchi());
     	
-    	txtResult.appendText(String.format("#VERTICI = %d\n#ARCHI = %d\n", model.nVertici(),model.nArchi()));
-    	txtResult.appendText("ARCHI:\n");
-    	txtResult.appendText(model.getArchi().toString());
+    	
+    	
     }
 
     @FXML
     void doDreamTeam(ActionEvent event) {
-    	txtResult.appendText("\n");
-    	
-    	Integer k; //n giocatori
+    	//CONTROLLA SE ESISTE GRAFO
+    	if(model.getGraph()==null) {
+    		txtResult.setText("Devi prima creare il grafo!");
+    		return;
+    	}
+    	Integer k;
     	
     	try {
-    		k = Integer.parseInt(txtK.getText());
+    		k=Integer.parseInt(txtK.getText());
     		
-    	} catch(NumberFormatException e) {
-    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    	}catch(NumberFormatException nfe) {
+    		txtResult.setText("Inserisci un numero di giocatori k");
     		return;
-    	} catch (NullPointerException npe) {
-    		txtResult.setText("Inserire un numero minimo di goal a partita!");
+    	}catch(NullPointerException npe) {
+    		txtResult.setText("Inserisci un numero di giocatori k");
     		return;
     	}
     	
-    	txtResult.appendText("Il DreamTeam è composto da:\n");
-    	List <Player> best = model.getDreamTeam(k);
-    	for(Player pi: best)
+    	List <Player> dream =model.trovaDreamTeam(k);
+    	txtResult.appendText("\n\n Il dream team ha un grado di titolarità di: "+model.getGradoDream()+"\nE' formato da:\n");
+    	for(Player pi:dream )
     		txtResult.appendText(pi+"\n");
-    	
-    	txtResult.appendText("Il GRADO di titolarità è di: "+model.getGradoTot(best));
-    	
     }
 
     @FXML
     void doTopPlayer(ActionEvent event) {
-    	txtResult.appendText("\n");
-    	Player top = model.getTopPlayer();
-    	
-    	if(top==null) {
-    		txtResult.appendText("Crea prima il GRAFO!\n");
+    	//CONTROLLA SE ESISTE GRAFO
+    	if(model.getGraph()==null) {
+    		txtResult.setText("Devi prima creare il grafo!");
     		return;
     	}
-    	
-    	txtResult.appendText("Il top player è: "+top+"\n");
-    	txtResult.appendText("Ha superato i seguenti giocatori in MINUTI giocati:\n");
-    	txtResult.appendText(model.getSconfitti(top).toString());
+    	Player top = model.getStrongest();
+    	txtResult.appendText("\n\nIl giocatore TOP è: \n"+top);
+    	txtResult.appendText("\nI giocatori da lui battuti sono:\n ");
+    	for(Player p: model.getBattuti(top))
+    		txtResult.appendText(p+"\n");
 
     }
 

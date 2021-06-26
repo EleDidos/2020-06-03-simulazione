@@ -3,6 +3,7 @@ package it.polito.tdp.PremierLeague.model;
 public class Player {
 	Integer playerID;
 	String name;
+	double grado; //grado di titolarità
 	
 	public Player(Integer playerID, String name) {
 		super();
@@ -51,6 +52,14 @@ public class Player {
 	@Override
 	public String toString() {
 		return playerID + " - " + name;
+	}
+	
+	public void setGrado(double grado) {
+		this.grado=grado;
+	}
+	
+	public double getGrado() {
+		return grado;
 	}
 	
 	
