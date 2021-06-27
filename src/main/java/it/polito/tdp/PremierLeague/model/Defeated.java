@@ -6,10 +6,10 @@ public class Defeated implements Comparable <Defeated>{
 	
 	private double delta; //di wuanti minuti sono stati sconfitti
 	private Player player;
-	public Defeated(double delta, Player pleayer) {
+	public Defeated( Player player,double delta) {
 		super();
 		this.delta = delta;
-		this.player = pleayer;
+		this.player = player;
 	}
 	public double getDelta() {
 		return delta;
@@ -28,6 +28,10 @@ public class Defeated implements Comparable <Defeated>{
 	public int compareTo(Defeated o) {
 		// TODO Auto-generated method stub
 		return (int) (o.delta-this.delta);
+	}
+	
+	public String toString() {
+		return player+" ( "+this.delta+" )";
 	}
 	
 

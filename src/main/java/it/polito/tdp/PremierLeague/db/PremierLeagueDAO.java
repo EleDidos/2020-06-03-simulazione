@@ -76,7 +76,7 @@ public class PremierLeagueDAO {
 				+ "from Players as p, Actions as a "
 				+ "WHERE p.PlayerID=a.PlayerID "
 				+ "GROUP BY p.PlayerID, p.Name "
-				+ "HAVING AVG(a.Goals>=?)" ;
+				+ "HAVING AVG(a.Goals)>?" ;
 		try {
 			Connection conn = DBConnect.getConnection() ;
 
@@ -88,9 +88,9 @@ public class PremierLeagueDAO {
 			
 			while(res.next()) {
 				if(!idMap.containsKey(res.getInt("p.PlayerID"))) {
-					
-					idMap.put(res.getInt("p.PlayerID"),new Player(res.getInt("p.PlayerID"),res.getString("p.Name")) );
-					System.out.println();
+					Player p = new Player(res.getInt("p.PlayerID"),res.getString("p.Name"));
+					idMap.put(res.getInt("p.PlayerID"),p );
+					System.out.println(p);
 				}//if
 				
 			}//while

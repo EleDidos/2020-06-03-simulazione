@@ -2,6 +2,7 @@ package it.polito.tdp.PremierLeague.model;
 
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -18,7 +19,7 @@ import it.polito.tdp.PremierLeague.db.PremierLeagueDAO;
 
 public class Model {
 	
-	private SimpleDirectedGraph< Player , DefaultWeightedEdge>graph;
+	private SimpleDirectedWeightedGraph< Player , DefaultWeightedEdge>graph;
 	private Map <Integer, Player  > idMap;
 	private PremierLeagueDAO dao;
 	private List <Player> best;
@@ -30,7 +31,7 @@ public class Model {
 	}
 	
 	public void creaGrafo(Double x) {
-		graph= new SimpleDirectedGraph<>(DefaultWeightedEdge.class);
+		graph= new SimpleDirectedWeightedGraph<>(DefaultWeightedEdge.class);
 		
 		dao.loadAllVertici(idMap,x);
 		Graphs.addAllVertices(graph, idMap.values());
@@ -70,9 +71,12 @@ public class Model {
 	}
 	
 	
-	public List<Player> getBattuti(Player top){
-		
-		return Graphs.successorListOf(graph,top);	
+	public List<Defeated> getBattuti(Player top){
+		List<Defeated> Battuti = new ArrayList <Defeated>();
+		for(Player p: Graphs.successorListOf(graph,top))
+			Battuti.add(new Defeated(p, graph.getEdgeWeight( graph.getEdge(top, p) )));
+		Collections.sort(Battuti);
+		return Battuti;	
 	}
 	
 	

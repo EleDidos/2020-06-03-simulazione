@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.PremierLeague.model.Defeated;
 import it.polito.tdp.PremierLeague.model.Model;
 import it.polito.tdp.PremierLeague.model.Player;
 import javafx.event.ActionEvent;
@@ -104,8 +105,8 @@ public class FXMLController {
     	Player top = model.getStrongest();
     	txtResult.appendText("\n\nIl giocatore TOP è: \n"+top);
     	txtResult.appendText("\nI giocatori da lui battuti sono:\n ");
-    	for(Player p: model.getBattuti(top))
-    		txtResult.appendText(p+"\n");
+    	for(Defeated d: model.getBattuti(top))
+    		txtResult.appendText(d+"\n");
 
     }
 
